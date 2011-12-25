@@ -38,13 +38,21 @@ do
   HR=`hr | awk '{print $4}'` 
   while [ $(( $NOW - $START )) -le $INTERVAL_TIME ]
   do
+    sleep 1 &
+    SLEEP_PID=$!
     TIME_REMAINING=$(( $INTERVAL_TIME - $NOW + $START ))
     TIMER=`date -v1970y -v1d -v0H -v0M -v0S -v +${TIME_REMAINING}S +%M:%S`
-    TOP_STRING=`printf "%-70s%15s" "$TIMER" "$HR"`
-    BOTTOM_STRING=`printf "%-125s%15s" "$DETAILS" "($MIN_HR - $MAX_HR)"`
-    growlnotify --image="/Users/paul/Desktop/chainring_big.png" -d $GROWL_ID -t "$TOP_STRING" -m "$BOTTOM_STRING"
-    sleep 1
+    if [ $HR == "port" ]; then HR=""; fi
+    TOP_STRING=`printf "%-70s%15s" "HR: $HR ($MIN_HR - $MAX_HR)" "$TIMER"`
+    BOTTOM_STRING=`printf "%-125s%15s" "$DETAILS" ""`
+    growlnotify -n "gworkout.sh" --image="./chainring_big.png" -d $GROWL_ID -t "$TOP_STRING" -m "$BOTTOM_STRING" &
+    GNOT_PID=$!
     NOW=`date +%s`
-    HR=`hr | awk '{print $4}'` 
+    HR=`hr | awk '{print $4}'`
+    HR_PID=$!
+    wait $SLEEP_PID
+    kill $HR_PID &> /dev/null
+    kill $GNOT_PID &> /dev/null
+
   done
 done
