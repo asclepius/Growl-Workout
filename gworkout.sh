@@ -19,6 +19,9 @@
 
 GROWL_ID=1337
 
+IMAGE1="./chainring_big.png"
+IMAGE2="./chainring_big_red.png"
+
 if [ $# -ne '1' ]
 then
   echo "usage $0 <filename>"
@@ -45,14 +48,22 @@ do
     if [ $HR == "port" ]; then HR=""; fi
     TOP_STRING=`printf "%-70s%15s" "HR: $HR ($MIN_HR - $MAX_HR)" "$TIMER"`
     BOTTOM_STRING=`printf "%-125s%15s" "$DETAILS" ""`
-    growlnotify -n "gworkout.sh" --image="./chainring_big.png" -d $GROWL_ID -t "$TOP_STRING" -m "$BOTTOM_STRING" &
+    IMAGE=$IMAGE1
+    if [ `echo $TIMER | cut -d : -f 1` -lt '1' ]; then
+      if [ `echo $TIMER | cut -d : -f 2` -le '5' ]; then
+        if [ $(( `echo $TIMER | cut -d : -f 2` % 2 )) -eq '1' ]; then
+          IMAGE=$IMAGE2
+        fi
+      fi
+    fi
+    growlnotify -n "gworkout.sh" --image=$IMAGE -d $GROWL_ID -t "$TOP_STRING" -m "$BOTTOM_STRING" &
     GNOT_PID=$!
     NOW=`date +%s`
     HR=`hr | awk '{print $4}'`
     HR_PID=$!
     wait $SLEEP_PID
-    kill $HR_PID &> /dev/null
-    kill $GNOT_PID &> /dev/null
+    kill $HR_PID &> /dev/null &
+    kill $GNOT_PID &> /dev/null &
 
   done
 done
